@@ -85,7 +85,7 @@ const MINIMUM_PRIORITY_FEE = 100_000;
 // Interacts with native currencies
 export class SealevelNativeTokenAdapter
   extends BaseSealevelAdapter
-  implements ITokenAdapter<Transaction>
+  implements ITokenAdapter<HyperlaneSolanaTransaction>
 {
   async getBalance(address: Address): Promise<bigint> {
     const balance = await this.getProvider().getBalance(new PublicKey(address));
@@ -125,24 +125,25 @@ export class SealevelNativeTokenAdapter
     return false;
   }
 
-  async populateApproveTx(): Promise<Transaction> {
-    throw new Error('Approve not required for native tokens');
+  async populateApproveTx(): Promise<HyperlaneSolanaTransaction> {
+    throw new Error('Approval not required for native tokens');
   }
 
   async populateTransferTx({
     weiAmountOrId,
     recipient,
     fromAccountOwner,
-  }: TransferParams): Promise<Transaction> {
+  }: TransferParams): Promise<HyperlaneSolanaTransaction> {
     if (!fromAccountOwner)
       throw new Error('fromAccountOwner required for Sealevel');
-    return new Transaction().add(
+    const tx = new Transaction().add(
       SystemProgram.transfer({
         fromPubkey: new PublicKey(fromAccountOwner),
         toPubkey: new PublicKey(recipient),
         lamports: BigInt(weiAmountOrId),
       }),
     );
+    return { transaction: tx, signers: [] };
   }
 
   async getTotalSupply(): Promise<bigint | undefined> {
@@ -154,7 +155,7 @@ export class SealevelNativeTokenAdapter
 // Interacts with SPL token programs
 export class SealevelTokenAdapter
   extends BaseSealevelAdapter
-  implements ITokenAdapter<Transaction>
+  implements ITokenAdapter<HyperlaneSolanaTransaction>
 {
   public readonly tokenMintPubKey: PublicKey;
 
@@ -201,7 +202,9 @@ export class SealevelTokenAdapter
     return false;
   }
 
-  populateApproveTx(_params: TransferParams): Promise<Transaction> {
+  async populateApproveTx(
+    _params: TransferParams,
+  ): Promise<HyperlaneSolanaTransaction> {
     throw new Error('Approve not required for sealevel tokens');
   }
 
@@ -210,12 +213,12 @@ export class SealevelTokenAdapter
     recipient,
     fromAccountOwner,
     fromTokenAccount,
-  }: TransferParams): Promise<Transaction> {
+  }: TransferParams): Promise<HyperlaneSolanaTransaction> {
     if (!fromTokenAccount)
       throw new Error('fromTokenAccount required for Sealevel');
     if (!fromAccountOwner)
       throw new Error('fromAccountOwner required for Sealevel');
-    return new Transaction().add(
+    const tx = new Transaction().add(
       createTransferInstruction(
         new PublicKey(fromTokenAccount),
         new PublicKey(recipient),
@@ -223,6 +226,7 @@ export class SealevelTokenAdapter
         BigInt(weiAmountOrId),
       ),
     );
+    return { transaction: tx, signers: [] };
   }
 
   async getTokenProgramId(): Promise<PublicKey> {
@@ -271,9 +275,14 @@ interface HypTokenAddresses {
   mailbox: Address;
 }
 
+export interface HyperlaneSolanaTransaction {
+  transaction: Transaction;
+  signers: Array<Keypair>;
+}
+
 export abstract class SealevelHypTokenAdapter
   extends SealevelTokenAdapter
-  implements IHypTokenAdapter<Transaction>
+  implements IHypTokenAdapter<HyperlaneSolanaTransaction>
 {
   public readonly warpProgramPubKey: PublicKey;
   public readonly addresses: HypTokenAddresses;
@@ -375,7 +384,7 @@ export abstract class SealevelHypTokenAdapter
     destination,
     recipient,
     fromAccountOwner,
-  }: TransferRemoteParams): Promise<Transaction> {
+  }: TransferRemoteParams): Promise<HyperlaneSolanaTransaction> {
     if (!fromAccountOwner)
       throw new Error('fromAccountOwner required for Sealevel');
     const randomWallet = Keypair.generate();
@@ -435,8 +444,11 @@ export abstract class SealevelHypTokenAdapter
       .add(setComputeLimitInstruction)
       .add(setPriorityFeeInstruction)
       .add(transferRemoteInstruction);
-    tx.partialSign(randomWallet);
-    return tx;
+
+    return {
+      transaction: tx,
+      signers: [randomWallet],
+    };
   }
 
   async getIgpKeys(): Promise<IgpPaymentKeys | undefined> {

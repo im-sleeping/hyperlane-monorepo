@@ -128,7 +128,7 @@ export async function estimateTransactionFeeSolanaWeb3({
 }): Promise<TransactionFeeEstimate> {
   const connection = provider.provider;
   const { value } = await connection.simulateTransaction(
-    transaction.transaction,
+    transaction.transaction.transaction,
   );
   assert(!value.err, `Solana gas estimation failed: ${JSON.stringify(value)}`);
   const gasUnits = BigInt(value.unitsConsumed || 0);

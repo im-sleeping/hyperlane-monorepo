@@ -89,9 +89,11 @@ export class SealevelHelloWorldAdapter
       blockhash: recentBlockhash,
       recentBlockhash,
     }).add(txInstruction);
-    transaction.partialSign(randomWallet);
 
-    return { type: ProviderType.SolanaWeb3, transaction };
+    return {
+      type: ProviderType.SolanaWeb3,
+      transaction: { transaction, signers: [randomWallet] },
+    };
   }
 
   // Should match https://github.com/hyperlane-xyz/hyperlane-monorepo/blob/dd7ff727b0d3d393a159afa5f0a364775bde3a58/rust/sealevel/programs/helloworld/src/processor.rs#L157

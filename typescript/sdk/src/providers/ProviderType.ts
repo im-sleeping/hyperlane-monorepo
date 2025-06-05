@@ -7,7 +7,6 @@ import type { EncodeObject as CmTransaction } from '@cosmjs/proto-signing';
 import type { DeliverTxResponse, StargateClient } from '@cosmjs/stargate';
 import type {
   Connection,
-  Transaction as SolTransaction,
   VersionedTransactionResponse as SolTransactionReceipt,
 } from '@solana/web3.js';
 import type {
@@ -35,6 +34,8 @@ import {
 
 import { HyperlaneModuleClient } from '@hyperlane-xyz/cosmos-sdk';
 import { Annotated, ProtocolType } from '@hyperlane-xyz/utils';
+
+import { HyperlaneSolanaTransaction } from '../token/adapters/SealevelTokenAdapter.js';
 
 export enum ProviderType {
   EthersV5 = 'ethers-v5',
@@ -264,9 +265,9 @@ export interface ViemTransaction extends TypedTransactionBase<VTransaction> {
 }
 
 export interface SolanaWeb3Transaction
-  extends TypedTransactionBase<SolTransaction> {
+  extends TypedTransactionBase<HyperlaneSolanaTransaction> {
   type: ProviderType.SolanaWeb3;
-  transaction: SolTransaction;
+  transaction: HyperlaneSolanaTransaction;
 }
 
 export interface CosmJsTransaction extends TypedTransactionBase<CmTransaction> {

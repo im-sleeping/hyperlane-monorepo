@@ -116,9 +116,13 @@ export function useSolanaTransactionFns(
       } = await connection.getLatestBlockhashAndContext();
 
       logger.debug(`Sending tx on chain ${chainName}`);
-      const signature = await sendSolTransaction(tx.transaction, connection, {
-        minContextSlot,
-      });
+      const signature = await sendSolTransaction(
+        tx.transaction.transaction,
+        connection,
+        {
+          minContextSlot,
+        },
+      );
 
       const confirm = (): Promise<TypedTransactionReceipt> =>
         connection
