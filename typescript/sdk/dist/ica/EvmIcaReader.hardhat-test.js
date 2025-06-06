@@ -1,0 +1,44 @@
+import { expect } from 'chai';
+import hre from 'hardhat';
+import { isAddressEvm } from '@hyperlane-xyz/utils';
+import { TestChainName } from '../consts/testChains.js';
+import { EvmCoreModule } from '../core/EvmCoreModule.js';
+import { MultiProvider } from '../providers/MultiProvider.js';
+import { testCoreConfig } from '../test/testUtils.js';
+import { EvmIcaRouterReader } from './EvmIcaReader.js';
+describe(EvmIcaRouterReader.name, async () => {
+    const CHAIN = TestChainName.test4;
+    let interchainAccountRouterAddress;
+    let interchainAccountRouterReader;
+    let signerAddress;
+    before(async () => {
+        const [signer] = await hre.ethers.getSigners();
+        const multiProvider = MultiProvider.createTestMultiProvider({ signer });
+        const config = {
+            ...testCoreConfig([CHAIN])[CHAIN],
+            owner: signer.address,
+        };
+        const addresses = await EvmCoreModule.deploy({
+            chain: CHAIN,
+            config,
+            multiProvider,
+        });
+        signerAddress = signer.address;
+        interchainAccountRouterAddress = addresses.interchainAccountRouter;
+        interchainAccountRouterReader = new EvmIcaRouterReader(multiProvider.getProvider(CHAIN));
+    });
+    describe(EvmIcaRouterReader.prototype.deriveConfig.name, async () => {
+        it('should read the ICA router config', async () => {
+            const res = await interchainAccountRouterReader.deriveConfig(interchainAccountRouterAddress);
+            expect(res.address).to.equal(interchainAccountRouterAddress);
+            expect(res.owner).to.equal(signerAddress);
+            // Proxy admin checks
+            expect(res.proxyAdmin.address).to.exist;
+            expect(isAddressEvm(res.proxyAdmin.address)).to.be.true;
+            expect(res.proxyAdmin.owner).to.equal(signerAddress);
+            // Remote ICA Routers
+            expect(res.remoteIcaRouters).to.exist;
+        });
+    });
+});
+//# sourceMappingURL=EvmIcaReader.hardhat-test.js.map
