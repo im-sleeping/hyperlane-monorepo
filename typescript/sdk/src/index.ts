@@ -2,6 +2,8 @@ export { MUTABLE_ISM_TYPE } from './ism/types.js';
 
 export { MUTABLE_HOOK_TYPE } from './hook/types.js';
 
+export { HyperlaneSolanaTransaction } from './token/adapters/SealevelTokenAdapter.js';
+
 export { HyperlaneApp } from './app/HyperlaneApp.js';
 export {
   AdapterClassType,

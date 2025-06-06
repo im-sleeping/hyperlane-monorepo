@@ -1,5 +1,6 @@
 export { MUTABLE_ISM_TYPE } from './ism/types.js';
 export { MUTABLE_HOOK_TYPE } from './hook/types.js';
+export { HyperlaneSolanaTransaction } from './token/adapters/SealevelTokenAdapter.js';
 export { HyperlaneApp } from './app/HyperlaneApp.js';
 export { AdapterClassType, BaseAppAdapter, BaseEvmAdapter, BaseSealevelAdapter, MultiProtocolApp, } from './app/MultiProtocolApp.js';
 export { S3Config, S3Receipt, S3Wrapper } from './aws/s3.js';
